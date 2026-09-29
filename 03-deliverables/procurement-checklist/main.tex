@@ -1,0 +1,347 @@
+% !TeX program = xelatex
+\documentclass[UTF8,a4paper,zihao=-4,fontset=none]{ctexart}
+\usepackage[margin=17mm,top=17mm,bottom=18mm,headheight=15pt,headsep=6mm]{geometry}
+\usepackage{amsmath,booktabs,tabularx,array,multirow}
+\usepackage[table]{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,fit,shapes.geometric}
+\usepackage{enumitem,fancyhdr,caption,float,hyperref,pifont}
+\setCJKmainfont[Path=fonts/,Extension=.ttf,AutoFakeBold=2]{MiSans-Normal}
+\setCJKsansfont[Path=fonts/,Extension=.ttf,AutoFakeBold=2]{MiSans-Normal}
+\setCJKmonofont[Path=fonts/,Extension=.ttf]{MiSans-Normal}
+
+\definecolor{Ink}{HTML}{17384D}
+\definecolor{Teal}{HTML}{087E8B}
+\definecolor{Blue}{HTML}{34699A}
+\definecolor{Pale}{HTML}{EAF4F5}
+\definecolor{Mist}{HTML}{F5F7F8}
+\definecolor{Amber}{HTML}{A56218}
+\definecolor{Warm}{HTML}{FFF1D9}
+\definecolor{Red}{HTML}{A23E48}
+\definecolor{Muted}{HTML}{5F6D76}
+\definecolor{Line}{HTML}{C8D6DB}
+
+\hypersetup{colorlinks=true,linkcolor=Ink,urlcolor=Teal,citecolor=Blue,
+  pdftitle={ACG720赛题三采购清单},pdfauthor={项目采购规划},bookmarksnumbered=true}
+\urlstyle{same}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\linespread{1.10}
+\setlength{\tabcolsep}{4.5pt}
+\renewcommand{\arraystretch}{1.24}
+\setlist[itemize]{leftmargin=1.5em,itemsep=2pt,topsep=3pt}
+\setlist[enumerate]{leftmargin=1.7em,itemsep=2pt,topsep=3pt}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\captionsetup{font=small,labelfont={bf,color=Ink},skip=5pt}
+
+\ctexset{
+  section={format=\Large\bfseries\color{Ink},beforeskip=1pt,afterskip=8pt},
+  subsection={format=\large\bfseries\color{Ink},beforeskip=9pt,afterskip=5pt}}
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small\color{Muted}ACG720 赛题三 · 采购清单}
+\fancyhead[R]{\small\color{Muted}2026-09-29 核对版}
+\fancyfoot[L]{\footnotesize\color{Muted}型号明确处可下单；接口、孔位和电池参数以实物为准}
+\fancyfoot[R]{\small\color{Ink}\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+\fancypagestyle{plain}{
+  \fancyhf{}
+  \fancyhead[L]{\small\color{Muted}ACG720 赛题三 · 采购清单}
+  \fancyhead[R]{\small\color{Muted}2026-09-29 核对版}
+  \fancyfoot[L]{\footnotesize\color{Muted}型号明确处可下单；接口、孔位和电池参数以实物为准}
+  \fancyfoot[R]{\small\color{Ink}\thepage}
+  \renewcommand{\headrulewidth}{0.3pt}}
+
+\newcommand{\yes}{\textcolor{Teal}{\ding{51}}}
+\newcommand{\wait}{\textcolor{Amber}{\ding{115}}}
+\newcommand{\no}{\textcolor{Red}{\ding{55}}}
+\newcommand{\checkb}{\raisebox{.15ex}{\fbox{\rule{0pt}{1.1ex}\rule{1.1ex}{0pt}}}}
+\newcommand{\note}[2]{\par\smallskip\noindent\colorbox{Pale}{\parbox{\dimexpr\linewidth-2\fboxsep\relax}{\small\textbf{\color{Teal}#1}\quad #2}}\par\smallskip}
+\newcommand{\warn}[2]{\par\smallskip\noindent\colorbox{Warm}{\parbox{\dimexpr\linewidth-2\fboxsep\relax}{\small\textbf{\color{Amber}#1}\quad #2}}\par\smallskip}
+\tikzset{
+  box/.style={draw=Line,fill=Mist,rounded corners=2pt,align=center,minimum height=10mm,inner sep=4pt,font=\small},
+  have/.style={box,fill=Teal!12,draw=Teal!65},
+  buy/.style={box,fill=Blue!10,draw=Blue!65},
+  pending/.style={box,fill=Warm,draw=Amber!75,dashed},
+  main/.style={box,fill=Ink,text=white,draw=Ink},
+  flow/.style={-{Latex[length=2mm]},thick,draw=Ink},
+  opt/.style={-{Latex[length=2mm]},thick,dashed,draw=Amber},
+  dim/.style={<->,thin,draw=Muted},
+  label/.style={font=\footnotesize,text=Muted,align=center}}
+
+\title{\textbf{\color{Ink}ACG720 赛题三采购清单}\\[6pt]
+  {\large ACG720 基础套装 + Raspberry Pi 5 / Hailo-8}}
+\author{现有设备去重 · 精确型号 · 尺寸布局 · 车载供电}
+\date{核验日期：2026 年 9 月 29 日}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+\vspace{-5mm}
+
+\note{直接结论}{现阶段可直接下单的是双轮差速动力组、FPGA 侧 IMU/ToF、编码器电平转换与通用安装件。树莓派、Hailo、microSD、散热器、桌面电源、摄像头和 Waveshare 屏幕按用户现有物品处理，不重复购买。电池、充电器、屏幕支架与 ACG720 专用安装板必须先测实物。}
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[node distance=8mm and 8mm]
+\node[main,text width=3.2cm] (root) {整车采购决策};
+\node[have,below left=of root,text width=3.7cm] (have) {\yes\ 已有，不重复买\\Pi 5 / Hailo / 卡 / 散热\\电源 / 相机 / 屏幕};
+\node[buy,below=of root,text width=3.7cm] (buy) {\yes\ 可直接下单\\电机 / 轮 / 支架 / 驱动\\IMU / ToF / 电平转换};
+\node[pending,below right=of root,text width=3.7cm] (wait) {\wait\ 参数确认后下单\\电池 / 充电器 / 保险\\屏幕与主板专用支架};
+\draw[flow] (root)--(have);\draw[flow] (root)--(buy);\draw[opt] (root)--(wait);
+\end{tikzpicture}
+\caption{采购范围：先去重，再按信息确定度分批购买。}
+\end{figure}
+
+\begin{table}[H]\small
+\caption{状态含义与执行规则}
+\begin{tabularx}{\linewidth}{@{}L{2.1cm}L{2.8cm}Y@{}}\toprule
+\textbf{标记} & \textbf{执行} & \textbf{判定标准}\\\midrule
+\yes\ 可下单 & 按表中品牌、型号和数量购买 & 厂商规格、接口和配套关系可核验\\
+\wait\ 待确认 & 不进入购物车，先测量/拍标签 & 现有设备型号或实物尺寸缺失\\
+\no\ 不购买 & 从清单删除 & 已有、板载，或当前阶段无必要\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\vfill
+{\small\color{Muted}本文是采购冻结清单，不代表产品已完成整车负载、温升和续航实测。赛题文件仅作为功能需求依据；其中没有出现的尺寸、速度和电气数据不得从任务描述反推。}
+
+\clearpage
+\section{已有设备与去重结果}
+
+用户已经说明拥有 ACG720 基础套装，并在截图中列出以下树莓派侧物品。截图只证明“有该类物品”，未给出相机、屏幕、电池与 Hailo 载板的完整型号，因此这些项目先复用、后验明规格。
+
+\begin{table}[H]\small
+\caption{现有设备盘点}
+\begin{tabularx}{\linewidth}{@{}L{3.4cm}C{1.4cm}L{2.8cm}Y@{}}\toprule
+\textbf{物品} & \textbf{状态} & \textbf{当前处理} & \textbf{仍需记录}\\\midrule
+ACG720 基础套装 & \yes & 不重复买开发板 & 板卡版本、外形、安装孔距、套装内电源/下载器/相机/TFT\\
+Raspberry Pi 5 & \yes & 作为拓展 AI 平台 & 内存容量、GPIO/PCIe 占用\\
+Hailo-8 & \yes & 先复用 & 是 M.2 模组、AI HAT 还是其他载板；叠装总高度\\
+microSD 卡 & \yes & 不再购买存储 & 容量、A2/U3 等级和健康状态\\
+Pi 5 散热器/风扇 & \yes & 保留主动散热 & 与 Hailo 载板是否机械冲突\\
+Pi 5 USB-C 电源 & \yes & 用于桌面测试 & 仅桌面供电，不等于车载电源\\
+Pupper/鱼眼摄像头 & \yes & 先接 Pi 5 验证 & 芯片型号、接口、排线及是否其实为同一相机+鱼眼镜头\\
+Waveshare 触控屏 & \yes & 先复用 & 完整商品名、尺寸、HDMI/DSI/SPI 接口\\
+网线、USB 线、杜邦线 & \yes & 复用作调试线 & USB 是否支持数据；电机回路不得使用杜邦线\\
+Pupper 电池 & \wait & 暂不重复买 & 标称/满充电压、容量、持续放电、接口、尺寸与充电器\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\warn{摄像头边界}{树莓派 CSI/USB 摄像头不能直接视作 ACG720 的 DVP 摄像头。若基础套装不含与教材兼容的 FPGA 摄像头，再补购“小梅哥 ACM5640-V5”1 个；下单前核对接口与排针版本。}
+
+\subsection{当前明确不买}
+
+\begin{table}[H]\small
+\begin{tabularx}{\linewidth}{@{}L{4.1cm}C{1.2cm}Y@{}}\toprule
+\textbf{项目} & \textbf{决定} & \textbf{理由}\\\midrule
+第二块 Raspberry Pi、第二套 microSD/散热器/桌面电源 & \no & 用户已有\\
+Raspberry Pi AI HAT+ 或另一块 Hailo & \no & 已有 Hailo-8；先确认现有载板和软件可用性\\
+SSD/NVMe & \no & 当前系统、模型和日志可先使用现有 microSD\\
+额外 MCU 主控板 & \no & 实时闭环由 FPGA/软核承担，树莓派负责拓展视觉\\
+独立 DDR/Flash 扩展 & \no & ACG720 已有板载存储，除非资源报告证明不足\\
+二维激光雷达 & \no & 基础阶段先用 ToF + 编码器 + IMU；由导航实测瓶颈再触发升级\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\clearpage
+\section{尺寸预算与底盘布局}
+
+Raspberry Pi 5 的 PCB 外形为 85 mm $\times$ 56 mm，安装孔距为 58 mm $\times$ 49 mm，孔径 2.7 mm\cite{pi5mechanical}。Hailo 载板、散热器和相机排线会扩大实际包络，因此不能只按裸板尺寸开孔。
+
+\begin{table}[H]\small
+\caption{机械设计输入}
+\begin{tabularx}{\linewidth}{@{}L{3.1cm}L{3.5cm}Y@{}}\toprule
+\textbf{对象} & \textbf{已确认/建议值} & \textbf{使用方法}\\\midrule
+Raspberry Pi 5 裸板 & 85 $\times$ 56 mm & 孔位按官方机械图；四角用 M2.5 隔离柱\\
+Pi 5 + Hailo + 散热 & 暂留 110 $\times$ 90 $\times$ 60 mm & 属于布局包络，不是厂商尺寸；以实物叠装复核\\
+ACG720 & 实物尺寸未确认 & 暂留 180 $\times$ 120 mm；\textbf{禁止按估算孔位加工}\\
+上下层底板 & 300 $\times$ 250 $\times$ 2 mm，6061-T6 铝板 & 原型建议；完成实物排布后再加工孔位\\
+层间净距 & 60 mm & 先用 60 mm M3 双内牙支撑柱；保证风道和插拔空间\\
+整车轮廓 & 约 320 $\times$ 250 mm（含轮） & 80 mm 轮装于两侧，实际宽度由支架和轴向位置决定\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[x=.038cm,y=.038cm]
+\draw[very thick,rounded corners=4pt,fill=Mist] (0,0) rectangle (300,250);
+\node[main,minimum width=180*.038cm,minimum height=120*.038cm] (fpga) at (105,165) {ACG720 预留区\\180 $\times$ 120};
+\node[have,minimum width=110*.038cm,minimum height=90*.038cm] (pi) at (235,175) {Pi 5 + Hailo\\110 $\times$ 90};
+\node[buy,minimum width=90*.038cm,minimum height=55*.038cm] (drv) at (75,55) {MDD10A\\驱动区};
+\node[pending,minimum width=125*.038cm,minimum height=55*.038cm] (bat) at (205,55) {电池区\\按实物做托架};
+\draw[dim] (0,-12)--node[below,label]{300 mm}(300,-12);
+\draw[dim] (-12,0)--node[left,label,rotate=90]{250 mm}(-12,250);
+\node[label] at (150,265) {上视图概念布局；端口朝外，电池靠近几何中心};
+\end{tikzpicture}
+\caption{建议双层底盘包络。框线不是 ACG720 安装孔图。}
+\end{figure}
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+\draw[thick,fill=Mist] (-6,1.8) rectangle (6,2.0);
+\draw[thick,fill=Mist] (-6,0) rectangle (6,.2);
+\node[label] at (0,2.35) {上层：ACG720、Pi 5/Hailo、传感器接口};
+\node[label] at (0,-.35) {下层：电池、MDD10A、稳压模块、保险与配电};
+\draw[dim] (6.4,.2)--node[right,label]{净距 60 mm}(6.4,1.8);
+\draw[very thick] (-4.4,-.1)--(-4.4,-1.1);\draw[very thick] (4.4,-.1)--(4.4,-1.1);
+\draw[fill=Ink!20] (-5,-1.8) circle (.7);\draw[fill=Ink!20] (5,-1.8) circle (.7);
+\node[label] at (-5,-2.75) {80 mm 驱动轮};\node[label] at (5,-2.75) {80 mm 驱动轮};
+\end{tikzpicture}
+\caption{侧视图：重件置于下层，主板远离电机磁场与高电流线束。}
+\end{figure}
+
+\warn{尺寸纠错}{此前出现的 138.05 $\times$ 91.57 mm 来自 ACX720-V3 机械图，不是已确认的 ACG720 机械图。本清单不再用该数值定义 ACG720 的加工孔位。}
+
+\section{可直接下单的精确型号}
+
+\subsection{动力、传感器与电气接口}
+
+\begin{table}[H]\footnotesize
+\caption{第一批采购清单：型号与数量已冻结}
+\begin{tabularx}{\linewidth}{@{}L{2.45cm}L{5.25cm}C{.75cm}Y@{}}\toprule
+\textbf{类别} & \textbf{品牌与完整型号} & \textbf{数量} & \textbf{关键匹配关系}\\\midrule
+编码器减速电机 & Pololu \#4847，99:1 Metal Gearmotor 25D$\times$69L mm HP 12V，48 CPR Encoder & 2 & 4 mm D 轴；输出轴约 4741.44 counts/rev；空载约 100 rpm，理论堵转电流约 5 A\cite{motor}\\
+电机支架 & Pololu \#2676，25D mm Metal Gearmotor Bracket Pair & 1 对 & 与 25D 电机配套；一包正好安装两台电机\cite{bracket}\\
+驱动轮 & Pololu \#3690，Multi-Hub Wheel 80$\times$10 mm，Black，2-Pack & 1 包 & 含 4 mm D 轴夹套，不再另购轮毂\cite{wheel}\\
+支撑球轮 & Pololu \#2692，Ball Caster with 1-inch Plastic Ball，Ball Bearings & 1 & 总高约 29 mm；仅用于整车总重控制在数磅内的原型\cite{caster}\\
+双路电机驱动 & Cytron MDD10A Rev 2.0 & 1 & 5--30 V 电机电源，PWM+DIR，3.3/5 V 逻辑；没有输入反接保护\cite{driver}\\
+姿态传感器 & DFRobot Gravity 9 DOF IMU，SKU SEN0694 & 1 & BMI323+BMM350，I\textsuperscript{2}C/UART，32$\times$27 mm；替代已停产的 Waveshare 10 DOF IMU Sensor (D)\cite{imu}\\
+测距传感器 & Waveshare VL53L1X Distance Sensor，SKU 14929 & 4 & 每块 20$\times$24 mm，3.3/5 V，I\textsuperscript{2}C，带 SHUT/INT；前/左前/右前/后各 1\cite{tof}\\
+编码器电平转换 & Texas Instruments SN74LVC244AN，PDIP-20 & 1 & VCC=3.3 V，输入可承受至 5.5 V；将编码器 5 V A/B 信号降到 FPGA 侧 3.3 V\cite{level}\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\note{速度尺度}{80 mm 车轮配 100 rpm 电机，理论空载线速度约 $\pi\times0.08\times100/60\approx0.42$ m/s。调试从低 PWM 限幅开始；堵转参数不是允许长期运行点。}
+
+\subsection{结构件与辅料}
+
+\begin{table}[H]\small
+\caption{第二批采购/加工清单}
+\begin{tabularx}{\linewidth}{@{}L{4.5cm}C{1cm}Y@{}}\toprule
+\textbf{精确规格} & \textbf{数量} & \textbf{说明}\\\midrule
+6061-T6 铝板，300$\times$250$\times$2 mm & 2 块 & 定制上下层；圆角、去毛刺；先摆实物再出孔位图\\
+M3 双内牙铝合金六角隔离柱，60 mm & 6 根 & 层间连接；搭配 M3$\times$8 螺钉\\
+M3$\times$6、M3$\times$8 内六角螺钉 & 各 20 个 & 电机支架、模块与层板安装\\
+M3 螺母、平垫、尼龙防松螺母 & 各 30 个 & 运动件优先使用防松螺母\\
+M2.5 尼龙隔离柱，双通，6 mm + M2.5 螺钉 & 4 套 & Raspberry Pi 5 固定；Hailo 层继续用原配支撑件\\
+M2 尼龙隔离柱和 M2$\times$6 螺钉 & 各 12 个 & 四块 ToF 模块固定\\
+DIP-20 插座、2.54 mm 洞洞板、100 nF 陶瓷电容 & 各 1 & 制作 SN74LVC244AN 转接板\\
+16 AWG 红/黑硅胶线 & 各 1 m & 电池和电机大电流主回路\\
+22 AWG 多色硅胶线 & 5 m & 编码器、传感器和低电流支路\\
+AMASS XT60H-M / XT60H-F & 各 2 个 & 仅在现有电池也是 XT60 或通过合规转接线时使用\\
+热缩管 2/3/5/8 mm + 扎带 + 编织网管 & 各 1 包 & 绝缘、应力释放和线束整理\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\warn{国产替代条件}{若 \#4847 无现货，可换国产 25D/37D 编码器电机，但商品资料必须同时给出：额定电压、减速比、输出转速、堵转电流、编码器每转计数、输出电平和轴径。缺一项就不能把驱动、电源和里程计参数锁死。}
+
+\clearpage
+\section{车载供电与条件采购}
+
+桌面 USB-C 电源只能用于实验桌。移动运行时，电机、ACG720 和树莓派必须从电池分成三条支路；电机大电流不得穿过开发板或普通杜邦线。
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[node distance=7mm and 10mm]
+\node[main,text width=3.7cm] (bat) {现有 Pupper 电池\\先读标签并测接口};
+\node[box,below=of bat,text width=4cm] (safe) {总开关 + 急停 + 主保险};
+\node[buy,below left=of safe,text width=3.4cm] (motor) {电机支路\\MDD10A + 2 电机};
+\node[pending,below=of safe,text width=3.4cm] (fpga) {ACG720 支路\\DFR0946 调至 9 V};
+\node[have,below right=of safe,text width=3.4cm] (pi) {Pi 5 支路\\Yahboom 5 V/5 A PD};
+\draw[flow] (bat)--(safe);\draw[flow] (safe)--(motor);\draw[opt] (safe)--(fpga);\draw[opt] (safe)--(pi);
+\node[label,below=9mm of fpga,text width=12cm] {三路在配电点共地；首次通电按“空载调压 $\rightarrow$ 限流测试 $\rightarrow$ 单支路带载 $\rightarrow$ 整车联调”执行。};
+\end{tikzpicture}
+\caption{建议供电树。虚线表示必须通过电池参数和负载测试后才可冻结。}
+\end{figure}
+
+\begin{table}[H]\small
+\caption{已选候选型号，但必须满足条件后购买}
+\begin{tabularx}{\linewidth}{@{}L{3.3cm}L{4.8cm}Y@{}}\toprule
+\textbf{用途} & \textbf{候选型号} & \textbf{放行条件}\\\midrule
+树莓派车载电源 & Yahboom Raspberry Pi 5 Power Supply Expansion Board，SKU 6000400431，选 Board+XH2.54 line & 电池工作范围落在 7--24 V；模块能独立安装；配 0.3 m、5 A、带 E-marker 的 USB-C to USB-C 线\cite{yahboom}\\
+ACG720 稳压 & DFRobot DFR0946，DC-DC Buck-Boost Converter Module 5 A，70$\times$39$\times$32 mm & 电池为 6--35 V；按赛题文件给出的 ACG720 6--12 V 输入范围，先将输出调到 9.0 V；以实测功耗与温升确认余量\cite{dfpower,contest}\\
+FPGA 摄像头 & 小梅哥 ACM5640-V5 & 基础套装确实未含兼容摄像头，且接口/排针与板卡、例程一致\cite{cammanual}\\
+屏幕支架 & 按 Waveshare 屏幕实物开孔的 2 mm 铝板或 3D 打印件 & 提供完整商品型号、安装孔距、接口方向和含线缆厚度\\
+电池托架/绑带 & 按电池长宽高定制 + 20 mm 魔术贴绑带 & 取得电池尺寸、重量和接口；重心靠近两驱动轮轴线\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[H]\small
+\caption{未满足前不得指定型号的项目}
+\begin{tabularx}{\linewidth}{@{}L{3.2cm}Y Y@{}}\toprule
+\textbf{项目} & \textbf{缺失信息} & \textbf{为什么不能假装精确}\\\midrule
+电池与充电器 & 化学体系、串数、满充电压、容量、持续放电、接口 & 决定驱动器电压、稳压输入范围、续航和安全充电方式\\
+主保险/支路保险 & 电机启动/堵转电流、整车持续电流、线径 & 保险过小会误动作，过大则失去保护意义\\
+总开关与急停 & 持续/峰值电流、安装孔和面板位置 & 普通信号开关不能切断电机主回路\\
+球轮高度垫块 & 电机支架朝向、底板高度、整车载荷 & 需要装车后调到两驱动轮与球轮三点共面\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\warn{关键安全点}{若 Pupper 电池是 6S，满充电压为 25.2 V，会超过上述 Yahboom 模块的 24 V 上限；没有读取电池标签前不得接线。普通 3S 电池满充为 12.6 V，也不能直接送入标称允许 6--12 V 的板卡，应经过稳压。}
+
+\section{下单与验收清单}
+
+\subsection{建议下单顺序}
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[node distance=7mm]
+\node[main,text width=2.7cm] (a) {1\quad 盘点实物};
+\node[buy,right=of a,text width=2.7cm] (b) {2\quad 动力与传感器};
+\node[box,right=of b,text width=2.7cm] (c) {3\quad 桌面联调};
+\node[pending,below=of c,text width=2.7cm] (d) {4\quad 电池与供电冻结};
+\node[box,left=of d,text width=2.7cm] (e) {5\quad 实物排布与开孔};
+\node[have,left=of e,text width=2.7cm] (f) {6\quad 整车验收};
+\draw[flow] (a)--(b);\draw[flow] (b)--(c);\draw[opt] (c)--(d);\draw[flow] (d)--(e);\draw[flow] (e)--(f);
+\end{tikzpicture}
+\caption{下单顺序。先买接口确定项，再冻结供电和机械加工。}
+\end{figure}
+
+\begin{table}[H]\footnotesize
+\caption{可打印勾选的采购执行表}
+\begin{tabularx}{\linewidth}{@{}C{.8cm}L{4.8cm}C{1.0cm}C{1.4cm}C{1.4cm}Y@{}}\toprule
+\textbf{勾选} & \textbf{物品/型号} & \textbf{数量} & \textbf{已下单} & \textbf{已验收} & \textbf{备注}\\\midrule
+\checkb & Pololu \#4847 电机 & 2 & \checkb & \checkb & 丝印、轴径、编码器线\\
+\checkb & Pololu \#2676 支架（pair） & 1 & \checkb & \checkb & 紧固件齐全\\
+\checkb & Pololu \#3690 80 mm 轮（2-pack） & 1 & \checkb & \checkb & 4 mm D 轴夹套\\
+\checkb & Pololu \#2692 球轮 & 1 & \checkb & \checkb & 转动和载荷\\
+\checkb & Cytron MDD10A Rev 2.0 & 1 & \checkb & \checkb & 端子、散热、逻辑电平\\
+\checkb & DFRobot SEN0694 IMU & 1 & \checkb & \checkb & I\textsuperscript{2}C/UART 自检\\
+\checkb & Waveshare VL53L1X SKU 14929 & 4 & \checkb & \checkb & SHUT/INT、逐只测距\\
+\checkb & TI SN74LVC244AN + DIP-20 座 & 1 & \checkb & \checkb & 正品来源、3.3 V 输出\\
+\checkb & 两块 300$\times$250$\times$2 mm 6061 铝板 & 2 & \checkb & \checkb & \textbf{实物排布后再开孔}\\
+\checkb & M2/M2.5/M3 紧固件与隔离柱 & 1 批 & \checkb & \checkb & 长度、数量、绝缘\\
+\checkb & 16/22 AWG 线材与 XT60H & 1 批 & \checkb & \checkb & 接口方向、压降\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{收到货后的最低验收}
+
+\begin{enumerate}
+\item 拍摄包装、板卡版本、丝印、接口和配件；保存商品页与数据手册。
+\item 电机悬空低占空比试转，确认左右方向、A/B 相波形和每圈计数；不得长时间堵转。
+\item MDD10A 先用限流电源单路测试，再连接两台电机；验证失控时默认 PWM 为 0。
+\item IMU 静止校零并旋转检查轴向；ToF 逐只修改地址、记录近/远距离和暗色目标表现。
+\item 稳压模块空载调压后加电子负载；记录电压跌落、纹波、温升与 Pi 欠压标志。
+\item 安装后检查线束不会卷入车轮，急停可直接切断动力，树莓派失联时 FPGA 仍可停车。
+\end{enumerate}
+
+\note{采购冻结条件}{正式加工专用孔位和购买电池保护件前，必须补齐四张照片/记录：ACG720 带尺正反面、Waveshare 屏幕背面型号、Pupper 电池标签与接口、Pi 5+Hailo+散热器叠装侧视图。}
+
+\begin{thebibliography}{99}\small\raggedright
+\bibitem{contest} 高云半导体. 全国大学生嵌入式芯片与系统设计竞赛'2026 FPGA赛道选题指南[Z]. 用户提供文件；赛题三见印刷15--17页.
+\bibitem{pi5mechanical} Raspberry Pi Ltd. Raspberry Pi 5 Mechanical Drawing[EB/OL]. \url{https://datasheets.raspberrypi.com/rpi5/raspberry-pi-5-mechanical-drawing.pdf}.
+\bibitem{motor} Pololu. 99:1 Metal Gearmotor 25Dx69L mm HP 12V with 48 CPR Encoder, item \#4847[EB/OL]. \url{https://www.pololu.com/product/4847/specs}.
+\bibitem{bracket} Pololu. 25D mm Metal Gearmotor Bracket Pair, item \#2676[EB/OL]. \url{https://www.pololu.com/product/2676}.
+\bibitem{wheel} Pololu. Multi-Hub Wheel 80x10 mm, Black, 2-Pack, item \#3690[EB/OL]. \url{https://www.pololu.com/product/3690}.
+\bibitem{caster} Pololu. Ball Caster with 1-inch Plastic Ball and Ball Bearings, item \#2692[EB/OL]. \url{https://www.pololu.com/product/2692/specs}.
+\bibitem{driver} Cytron Technologies. MDD10A Rev 2.0 Dual Channel 10A Motor Driver[EB/OL]. \url{https://sg.cytron.io/p-10amp-5v-30v-dc-motor-driver-2-channels}.
+\bibitem{imu} DFRobot. Gravity 9 DOF IMU Sensor, SKU SEN0694[EB/OL]. \url{https://wiki.dfrobot.com/sen0694/}.
+\bibitem{tof} Waveshare. VL53L1X Distance Sensor, SKU 14929[EB/OL]. \url{https://www.waveshare.com/vl53l1x-distance-sensor.htm}.
+\bibitem{level} Texas Instruments. SN74LVC244A Octal Buffer/Driver Datasheet[EB/OL]. \url{https://www.ti.com/lit/ds/symlink/sn74lvc244a.pdf}.
+\bibitem{yahboom} Yahboom. Power Supply Expansion Board for Raspberry Pi 5, SKU 6000400431[EB/OL]. \url{https://category.yahboom.net/products/power-board-pi5}.
+\bibitem{dfpower} DFRobot. DC-DC Buck-Boost Converter Module 5A, SKU DFR0946[EB/OL]. \url{https://www.dfrobot.com/product-2539.html}.
+\bibitem{cammanual} 小梅哥 FPGA 团队. 第44章：基于 OV5640 摄像头理论知识讲解[Z]. ACG720 配套资料.
+\end{thebibliography}
+
+\note{证据边界}{型号与网页规格核验至 2026-09-29；价格、库存和产品修订会变化。机械布局中的“预留区”是设计建议，不是厂商机械图。}
+
+\end{document}

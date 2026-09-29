@@ -1,0 +1,636 @@
+% !TeX program = xelatex
+% 中文工程实施指南；所有示意图均在本文件内以 TikZ 绘制。
+\documentclass[UTF8,a4paper,zihao=-4,fontset=fandol]{ctexart}
+\usepackage[margin=19mm,top=19mm,bottom=19mm,headheight=15pt,headsep=7mm]{geometry}
+\usepackage{amsmath,amssymb,booktabs,tabularx,array,multirow}
+\usepackage[table]{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,shapes.geometric}
+\usepackage{enumitem,fancyhdr,caption,float,hyperref}
+\definecolor{Ink}{HTML}{18354A}
+\definecolor{Teal}{HTML}{117F83}
+\definecolor{Pale}{HTML}{EEF5F7}
+\definecolor{Mist}{HTML}{F4F6F8}
+\definecolor{Amber}{HTML}{986421}
+\definecolor{Warm}{HTML}{FFF6E8}
+\definecolor{Muted}{HTML}{5B6B76}
+\definecolor{Line}{HTML}{CEDCE1}
+\hypersetup{colorlinks=true,linkcolor=Ink,urlcolor=Teal,citecolor=Teal,
+ pdftitle={ACG720赛题三实施指南},pdfauthor={项目方案整理},bookmarksnumbered=true}
+\urlstyle{same}
+\ctexset{section={format=\Large\bfseries\color{Ink},beforeskip=0pt,afterskip=12pt},
+ subsection={format=\large\bfseries\color{Ink},beforeskip=12pt,afterskip=7pt},
+ subsubsection={format=\normalsize\bfseries\color{Teal},beforeskip=8pt,afterskip=4pt}}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\linespread{1.18}
+\setlist[itemize]{leftmargin=1.6em,itemsep=3pt,topsep=4pt,parsep=0pt}
+\setlist[enumerate]{leftmargin=1.8em,itemsep=4pt,topsep=4pt,parsep=0pt}
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1.35}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\captionsetup{font=small,labelfont={bf,color=Ink},skip=6pt}
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small\color{Muted}ACG720\enspace /\enspace 赛题三实施指南}
+\fancyhead[R]{\small\color{Muted}2026 FPGA 创新设计赛道}
+\fancyfoot[L]{\footnotesize\color{Muted}设计方案与验证计划 · 非实测成果报告}
+\fancyfoot[R]{\small\color{Ink}\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+\newcommand{\note}[2]{\par\smallskip\noindent\colorbox{Pale}{\parbox{\dimexpr\linewidth-2\fboxsep\relax}{\small\textbf{\color{Teal}#1}\quad #2}}\par\smallskip}
+\newcommand{\warn}[2]{\par\smallskip\noindent\colorbox{Warm}{\parbox{\dimexpr\linewidth-2\fboxsep\relax}{\small\textbf{\color{Amber}#1}\quad #2}}\par\smallskip}
+\newcommand{\nextpage}{\clearpage}
+\newcommand{\tagline}[1]{{\small\color{Muted}#1}\par}
+\tikzset{box/.style={draw=Line,fill=Pale,rounded corners=2pt,align=center,minimum height=10mm,inner sep=5pt,font=\small},
+ mainbox/.style={box,fill=Ink,text=white,draw=Ink},
+ tealbox/.style={box,fill=Teal!9,draw=Teal!55},
+ optbox/.style={box,fill=Warm,draw=Amber!60,dashed},
+ flow/.style={-{Latex[length=2mm]},thick,draw=Ink},
+ optional/.style={flow,dashed,draw=Amber},
+ labeltext/.style={font=\footnotesize,text=Muted,align=center}}
+\title{\textbf{\color{Ink}ACG720 赛题三实施指南}\\[7pt]
+ {\large 基于 FPGA 的具身智能机器人\\实时感知与自主控制系统}}
+\author{工程方案 · 软硬件配置 · 分阶段实现 · 验收方法}
+\date{依据 2026 年高云赛题指南\quad |\quad 资料核验：2026 年 9 月 26 日}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+\vspace{-5mm}
+\note{阅读定位}{面向已申请小梅哥 ACG720 的参赛队伍。本文将赛题要求转换为可执行的开发路线；所有性能目标、周期和配置建议均须上板验证。}
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+\node[mainbox,text width=4.5cm] (root) at (0,0) {赛题三\quad 感知、控制与自主任务};
+\node[tealbox,text width=5.3cm] (base) at (-3.7,-1.6) {基础能力\quad FPGA + 软核};
+\node[optbox,text width=5.3cm] (ext) at (3.7,-1.6) {拓展能力\quad 可选边缘 AI};
+\draw[flow] (root) -- (base);\draw[optional] (root) -- (ext);
+\node[box,text width=5.3cm,align=left] (b) at (-3.7,-3.8) {任务 1\enspace 摄像头、IMU 与显示\\任务 2\enspace 编码器闭环运动\\任务 3\enspace 减速、停车与绕障\\任务 4\enspace 起终点及路径点导航};
+\node[box,text width=5.3cm,align=left] (e) at (3.7,-3.8) {任务 5\enspace 目标检测或跟踪\\任务 6\enspace 识别驱动任务执行\\[3pt]\color{Muted}示例：搜索红色水瓶，\\安全接近并停车};
+\draw[flow] (base) -- (b);\draw[optional] (ext) -- (e);
+\end{tikzpicture}
+\caption{赛题任务思维导图：四项基础任务构成完整移动机器人，AI 为拓展层。}\label{fig:mindmap}
+\end{figure}
+
+\textbf{建议起步组合}\quad ACG720 + 两轮差速底盘 + 编码器电机 + 适配摄像头 + IMU + 测距传感器。优先建立稳定的采集、闭环、避障与路径点导航，再增加定位修正和视觉智能。
+
+\begin{tabularx}{\linewidth}{@{}L{3.2cm}Y r@{}}
+\toprule
+\textbf{阅读顺序} & \textbf{解决的问题} & \textbf{页码}\\\midrule
+1\quad 赛题与目标 & 要做什么，哪些内容影响评分 & \pageref{sec:requirements}\\
+2\quad 硬件与架构 & 板卡、外设、电源怎样配合 & \pageref{sec:hardware}\\
+3\quad 软件与工程 & 工具、软核、IP 和接口怎样组织 & \pageref{sec:software}\\
+4\quad 基础任务实现 & 感知、运动、避障、导航如何落地 & \pageref{sec:base}\\
+5\quad 进阶与 AI & 怎样逐级增强，如何接入 RK3588 & \pageref{sec:advanced}\\
+6\quad 验证与推进 & 按什么顺序开发，怎样证明完成 & \pageref{sec:verification}\\\bottomrule
+\end{tabularx}
+
+\vfill
+{\small\color{Muted}信息标记：\textbf{官方要求}来自指南；\textbf{建议方案}为工程选择；\textbf{待确认}依赖实物、官方答疑或测试。本文不含虚构的实测成功率、资源占用或时序结果。}
+
+\nextpage
+\section{赛题与目标}\label{sec:requirements}
+\tagline{先明确功能边界，再把每项要求对应到可展示的证据。}
+
+赛题三要求 FPGA 构建机器人实时控制系统，并探索与边缘 AI 的协同。基础部分表述为“仅使用 FPGA + 软核 CPU 即可完成”；拓展允许使用 RK3588 等平台。表\ref{tab:req}按原文归纳完整任务。\cite{contest}
+
+\begin{table}[H]\centering\small
+\caption{要求—实现—证据对照表}\label{tab:req}
+\begin{tabularx}{\linewidth}{@{}L{1.1cm}L{5.0cm}Y@{}}\toprule
+\textbf{任务} & \textbf{官方要求} & \textbf{建议实现与演示证据}\\\midrule
+1 感知 & 摄像头采集与图像显示；IMU 采集；实时显示画面与姿态角 & FPGA 视频通路、IMU 接口、画面叠字；录像、帧计数、角度变化记录\\
+2 运动 & 前进、后退、转向、定点旋转；支持编码器反馈闭环 & 双轮独立速度环；目标/实测轮速曲线、负载变化和旋转演示\\
+3 避障 & 超声波、ToF 或激光测距；检测、减速、停车、自主绕障 & 距离采集、安全仲裁、绕障状态机；距离、状态、PWM 同步日志\\
+4 导航 & 指定场景起点到终点自主移动、障碍避让、路径点导航 & 位姿估计、路径点跟踪与避障恢复；路径记录、到点误差与重复试验\\
+5 视觉 & 实现目标检测或目标跟踪；示例含人员、物体、指定目标跟随 & 选择明确目标和场景；检测框、类别、置信度及跟踪效果\\
+6 任务 & 结合识别实现目标搜索、语义导航、自主任务执行 & 任务状态机；例如搜索指定红色水瓶、安全接近并停下\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[x=0.17cm,y=0.7cm]
+\foreach \y/\n/\v/\c in {4/FPGA 实时感知与控制/40/Ink,3/系统稳定性/25/Teal,2/自主导航能力/20/Teal,1/创新设计/10/Muted,0/AI 扩展功能/5/Amber}{
+ \node[anchor=east,font=\small] at (-1,\y) {\n};
+ \fill[\c!12] (0,\y-.19) rectangle (40,\y+.19);
+ \fill[\c] (0,\y-.19) rectangle (\v,\y+.19);
+ \node[anchor=west,font=\small,text=Ink] at (\v+1,\y) {\v\%};}
+\end{tikzpicture}
+\caption{官方评分权重。前三项合计 85\%，用于安排开发投入，不代表基础任务自动获得 85 分。}\label{fig:score}
+\end{figure}
+
+\warn{规则边界}{原文未规定统一的车速、帧率、定位误差、场地尺寸和完成时限。本文的数字是内部建议；任务 5 的例子不是要求逐一全部实现。赛题四的 MCU 条款不可直接迁移为赛题三禁令。}
+
+\nextpage
+\section{硬件与系统架构}\label{sec:hardware}
+\subsection{按实时性划分三个执行层}
+
+建议将编码器、PWM、测距有效性判断和控制输出仲裁留在 FPGA 逻辑中；将姿态融合、里程计、路径点和任务管理放在软核；视觉推理按需交给边缘 AI。软核实现复杂分支更灵活，FPGA 并行处理适合稳定的采集与控制周期。
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+\node[box,text width=2.4cm] (cam) at (-5.5,0) {摄像头\\DVP / 已验证接口};
+\node[box,text width=2.4cm] (sen) at (-5.5,-2) {IMU / 测距\\SPI、I\textsuperscript{2}C、UART};
+\node[box,text width=2.4cm] (enc) at (-5.5,-4) {左右编码器\\A/B 相输入};
+\node[mainbox,text width=4cm,minimum height=16mm] (vid) at (0,0) {FPGA 视频通路\\采集、缓存、OSD、显示};
+\node[mainbox,text width=4cm,minimum height=16mm] (io) at (0,-2) {FPGA 实时采集\\时间戳、计数、有效性};
+\node[mainbox,text width=4cm,minimum height=16mm] (ctrl) at (0,-4) {FPGA 闭环与仲裁\\测速、PI、限幅、PWM};
+\node[box,text width=3cm] (display) at (5.5,0) {DDR3 / HDMI\\画面与状态显示};
+\node[tealbox,text width=2.4cm,minimum height=16mm] (cpu) at (5.5,-2) {软核 CPU\\融合、定位、导航};
+\node[box,text width=2.4cm] (motor) at (5.5,-4) {电机驱动器\\左右减速电机};
+\node[optbox,text width=4cm] (ai) at (0,-6) {可选 RK3588\\目标识别、语义任务};
+\draw[flow] (cam)--(vid);\draw[flow] (vid)--(display);
+\draw[flow] (sen)--(io);\draw[flow] (enc)--(ctrl);
+\draw[flow] (io)--node[above,labeltext]{快照}(cpu);
+\draw[flow] (cpu.south west)--node[above,sloped,labeltext]{$v,\omega$}(ctrl.north east);
+\draw[flow] (io)--(ctrl);\draw[flow] (ctrl)--(motor);
+\draw[optional] (ai.east) -| node[pos=.2,below,labeltext]{检测结果 / 任务请求}(cpu.east);
+\end{tikzpicture}
+\caption{主要职责架构。软核还读取编码器/轮速快照估计位姿；AI 的图像可来自 FPGA 传输或独立相机。AI 输出经任务和安全仲裁后才影响运动。}\label{fig:architecture}
+\end{figure}
+
+\begin{table}[H]\small
+\caption{职责边界与运行原则}
+\begin{tabularx}{\linewidth}{@{}L{2.5cm}Y Y@{}}\toprule
+\textbf{执行层} & \textbf{主要职责} & \textbf{运行原则}\\\midrule
+FPGA 硬件逻辑 & 数据采集、视频、编码器、轮速环、安全输出 & 不等待 AI；能独立检测超时并进入安全状态\\
+软核固件 & 配置设备、融合、位姿、路径点、状态机 & 非阻塞调度；规划未完成时继续执行已确认的安全命令\\
+可选边缘 AI & 图像推理、目标属性、任务级决策 & 结果带时间戳与置信度；失联后基础控制保持可用\\\bottomrule
+\end{tabularx}
+\end{table}
+\note{FPGA 主体性}{展示硬件模块、波形和资源报告，说明 FPGA 实际承担的计算与实时职责。仅把它当作 IO 转接板，会削弱本题最重要的技术呈现。}
+
+\nextpage
+\subsection{ACG720 资源与外设配置}\label{sub:hardware}
+
+指南的平台简介覆盖 60K/138K 配置，申请表列出 ACG720 的 GW5AT-LV138PG484AC1。你们已申请 ACG720，实际器件后缀与板卡版本仍须核对。官网另有标题为 ACX720 的相关页面，不能据名称相近混用原理图。\cite{contest,board}
+
+\begin{table}[H]\small
+\caption{文档列示资源及本方案用途，最终以实物与原理图为准}
+\begin{tabularx}{\linewidth}{@{}L{3.5cm}Y Y@{}}\toprule
+\textbf{资源} & \textbf{用途} & \textbf{开工前核对}\\\midrule
+GW5AT 60K/138K 配置 & 并行采集、控制、软核与图像逻辑 & 完整料号、封装、速度等级、EDA 支持\\
+256 MB DDR3 & 视频帧缓存、大块数据 & 芯片型号、位宽、时钟及原厂 IP 例程\\
+128 Mb QSPI Flash & FPGA 配置与启动相关数据 & 128 Mb = 16 MB；固件布局与启动方式\\
+50 MHz 有源晶振 & 系统参考时钟 & PLL 配置、时钟引脚、复位条件\\
+图像/显示/扩展接口 & 相机、HDMI、外设连接 & 插座方向、bank 电压、复用与约束\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{table}[H]\small
+\caption{建议硬件清单：按兼容条件选具体型号}
+\begin{tabularx}{\linewidth}{@{}L{2.4cm}L{4.9cm}Y@{}}\toprule
+\textbf{模块} & \textbf{基础方案} & \textbf{选择要点 / 可选升级}\\\midrule
+底盘与电机 & 两轮差速、万向轮、两路带 A/B 编码器的减速电机 & 轮径一致、编码器参数明确；装配刚性和低重心\\
+驱动器 & 两路 H 桥，PWM/方向/使能控制 & 电压、电流、散热、限流与制动模式匹配电机\\
+摄像头 & 优先采用随板例程验证过的 OV5640 DVP 模组 & 不能只按芯片名采购；OV5647 等模组需另核接口\\
+IMU & 6 轴 SPI/I\textsuperscript{2}C 模组 & 有数据手册、数据就绪信号；9 轴需磁干扰评估\\
+测距 & 前方与侧方多点 ToF / 超声 / 激光 & 倒车补后方覆盖；二维雷达增强空间观测\\
+显示与调试 & HDMI 屏、适配下载器、UART 调试 & 显示画面与状态；逻辑分析仪有助定位时序问题\\
+电源与保护 & 电池、合规稳压模块、保险、总开关、急停 & 按峰值功耗、满电电压和压降设计\\
+边缘 AI & 基础阶段可不配置 & 拓展采用 RK3588 类板卡及独立供电、散热\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\warn{采购检查}{先取得板卡原理图、引脚约束、摄像头与 DDR3 例程，再锁定外设。FPGA 芯片拥有某接口能力，不等于该板已引出可直接连接的接口。}
+
+\nextpage
+\subsection{供电、电平与机械集成}
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+\node[mainbox,text width=3.1cm] (bat) at (0,0) {电池 / 适配器\\总开关与保险};
+\node[box,text width=3.8cm] (m) at (-4.5,-1.7) {电机供电分支\\驱动器、大电容、保护};
+\node[box,text width=3.8cm] (f) at (0,-3.1) {稳压后的逻辑分支\\ACG720 与传感器};
+\node[optbox,text width=3.8cm] (a) at (4.5,-1.7) {可选 AI 供电分支\\RK3588 与散热};
+\draw[flow] (bat)--(m);\draw[flow] (bat)--(f);\draw[optional] (bat)--(a);
+\node[labeltext,text width=12cm] at (0,-4.4) {信号参考地保持可靠连接；大电流回路远离 IMU 与编码器回路。\\该图为分配原则，实际稳压参数和接地布局按器件资料与板级测试确定。};
+\end{tikzpicture}
+\caption{电源分配树：分支稳压和合理回流布局降低电机扰动对逻辑系统的影响。}\label{fig:power}
+\end{figure}
+
+\textbf{输入电压。}指南标示 ACG720 支持 6--12 V，接电前仍需核对所收板卡。普通每节满充 4.2 V 的三串锂电池满电为 12.6 V，不能直接当成符合 12 V 上限的电源。若采用 9 V 稳压输出，也需核对稳压器输入范围、功率和瞬态响应。
+
+\textbf{电机驱动。}连续能力按持续负载、PCB 散热与温升评估；峰值能力按启动/堵转电流、允许持续时间和限流机制核对。不要用一个固定倍数代替热设计。急停失能可能产生滑行，受控刹车与切断使能的停车行为须分别实测。\cite{ti}
+
+\textbf{电平与引脚。}测距模块、编码器与相机的供电电压不一定等于信号电压。逐项记录 bank VCCIO、输入电平、上拉电压和电平转换方向；不可默认所有扩展口都耐受 5 V。I\textsuperscript{2}C 多模块应检查地址冲突与上拉并联。
+
+\textbf{机械与覆盖。}相机和 IMU 固定牢靠，IMU 轴向与车体坐标一致；编码器线与电机动力线分开布置。避障必须覆盖车体外形：原地旋转时角点会扫掠，倒车时前向传感器无法保护后方。二维雷达也可能漏掉扫描平面之外的障碍。
+
+\begin{table}[H]\small
+\caption{上电前五项检查}
+\begin{tabularx}{\linewidth}{@{}L{1cm}Y@{}}\toprule
+1 & 记录板卡型号、PCB 版本、FPGA 完整料号；匹配原理图与约束。\\
+2 & 空载测量各路电压，再测试电机启动时逻辑供电波动。\\
+3 & 驱动默认禁用；复位、下载、看门狗超时时均不得误启动。\\
+4 & 先架空轮子验证方向、编码器符号、限流和急停行为。\\
+5 & 固定线束，检查车体边角、低矮障碍、倒车与旋转的感知盲区。\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\nextpage
+\section{软件与工程配置}\label{sec:software}
+\subsection{开发环境与首次跑通顺序}
+
+使用与准确 FPGA 料号和板级例程相兼容的稳定工具链。官方页面当前列出 Gowin EDA V1.9.12.04 和 GMD V2025.01；这些是核查时的版本快照，项目建立后应固定 EDA、IP、编译器与例程版本。\cite{eda,gmd}
+
+\begin{table}[H]\small
+\caption{开发工具及其产物}
+\begin{tabularx}{\linewidth}{@{}L{3.4cm}Y Y@{}}\toprule
+\textbf{工具 / 环境} & \textbf{用途与产物} & \textbf{配置要点}\\\midrule
+Gowin EDA & RTL 综合、布局布线、时序报告、配置码流 & 按完整料号建工程；确认需要的 IP 与许可证\\
+Gowin Programmer & SRAM 下载、Flash 固化 & 下载器驱动、烧录模式、Flash 型号须匹配\\
+GMD / 对应软核工具链 & C/C++ 编译链接、ELF/映像、调试 & BSP、链接脚本、启动代码与硬件地址一致\\
+HDL 仿真器 & 编码器、PI、协议、FIFO 测试 & 用例覆盖反转、溢出、复位、背压；需要时编译高云仿真库\\
+在线逻辑分析仪 & 采集内部波形 & 观察速度、编码器、距离有效、仲裁与输出\\
+主机日志工具 & 串口/网络抓取和离线绘图 & 记录时间戳、版本、参数和失败原因\\\bottomrule
+\end{tabularx}
+\end{table}
+
+教育版公开支持列表中列有部分 60K 料号，不能由此保证 138K 可用。建议先在软件中确认准确器件；如需商业版，官网提供免费许可证申请入口。\cite{education,eda}
+
+Gowin EDA 有 Windows、Linux、macOS 下载项；GMD 当前官方页面列出 Windows/Linux。Mac 可用于源码与文档工作，软核构建和调试可安排在已验证的 Windows/Linux 主机；虚拟机的 USB 下载器兼容性需实际测试。\cite{eda,gmd}
+
+\begin{enumerate}
+\item \textbf{板级最小工程：}原厂点灯、复位、UART 输出版本号；验证器件与下载链路。
+\item \textbf{存储和显示：}DDR3 自检与 HDMI 彩条分别通过，再接摄像头联调。
+\item \textbf{软核最小系统：}串口输出、定时中断、读写自定义寄存器；确认复位和启动。
+\item \textbf{控制模块：}单独仿真编码器和 PI，再在架空轮子上联调。
+\item \textbf{固化启动：}码流与固件版本配套保存，断电重启应进入安全待机状态。
+\end{enumerate}
+
+\note{软核选择}{优先复用与实际板卡匹配、可验证的 Cortex-M1 或 RISC-V 工程；GoRV32 是可研究的官方选项。基础版建议裸机或轻量调度，不以在软核上运行 Linux/ROS 作为前置条件。\cite{gorv}}
+
+\nextpage
+\subsection{模块接口、时钟与软件组织}
+
+\begin{table}[H]\small
+\caption{建议工程分层，名称为自定义目录而非厂商固定模板}
+\begin{tabularx}{\linewidth}{@{}L{3.5cm}Y@{}}\toprule
+\texttt{rtl/video/} & 相机配置与采集、像素转换、帧管理、OSD、显示时序\\
+\texttt{rtl/control/} & 编码器、轮速估计、PI、PWM、速度限制、安全仲裁\\
+\texttt{rtl/sensors/} & SPI/I\textsuperscript{2}C/UART、时间戳、数据有效与故障计数\\
+\texttt{rtl/soc/} & 软核、总线、寄存器、中断、共享数据快照\\
+\texttt{fw/} & 设备驱动、姿态融合、里程计、路径点、任务状态机\\
+\texttt{sim/\quad constraints/} & 模块测试；CST 物理约束与 SDC 时序约束\\
+\texttt{host/\quad docs/} & 日志解析、协议、接线记录、版本与测试说明\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\textbf{建议寄存器协议。}软核通过统一寄存器接口读状态、写命令。以下是需要的字段，不预设总线地址；确认软核总线后再分配地址和访问属性。
+
+\begin{table}[H]\small
+\caption{软硬件数据接口的最小字段}
+\begin{tabularx}{\linewidth}{@{}L{3.6cm}L{1.6cm}Y@{}}\toprule
+\textbf{字段} & \textbf{方向} & \textbf{含义与一致性要求}\\\midrule
+\texttt{time / seq / valid} & 读 & 公共时间戳、快照序号、有效位；成组读取不撕裂\\
+\texttt{enc\_L / enc\_R} & 读 & 有符号计数、轮速估计；定义溢出处理和量纲\\
+\texttt{imu / range} & 读 & 原始数据、传感器状态、数据年龄\\
+\texttt{target\_L / target\_R} & 写 & 轮速目标、命令序号；双轮目标同一周期生效\\
+\texttt{heartbeat / mode} & 写 & 命令存活计时、使能模式；过期自动退出运动\\
+\texttt{fault / counters} & 读/清 & 传感器超时、编码器异常、缓存错误；明确清除语义\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\textbf{跨时钟域。}控制时钟、相机像素时钟、DDR 用户时钟和显示像素时钟分别约束。单比特状态按同步器处理，多位数据用握手或异步 FIFO；禁止把多位总线逐位同步后当一致数据。复位释放在各时钟域内同步，PLL 锁定和 DDR 初始化成功前不开放业务。
+
+\textbf{调度。}硬件周期完成轮速控制，软核处理事件和较低频任务。导航可从 20--50 Hz、姿态处理从 100--200 Hz 起步，但每个周期应实测最坏执行时间。日志、图像与规划不能阻塞安全仲裁；临界数据优先放片内存储，减少 DDR 争用。
+
+\warn{时序检查}{不要用大范围 false-path 隐藏错误。建立真实时钟与 IO 时序约束，检查未约束路径、时序裕量和 CDC；仿真通过并不能替代这些检查。}
+
+\note{常用缩写}{OSD：画面叠字；PI：比例积分控制；DVP：并行数字视频接口；FIFO：先进先出缓存；BSP：板级支持包；CDC：跨时钟域；SCCB：相机配置串行总线。roll / pitch / yaw 分别为横滚 / 俯仰 / 航向。}
+
+\nextpage
+\section{基础任务实现}\label{sec:base}
+\subsection{任务 1：摄像头采集、显示与姿态信息}
+
+建议先以 \textbf{640\,$\times$\,480、RGB565、30 帧/秒采集}建立最小视频链路；显示端可采用显示器支持的独立刷新时序。OV5640/OV5647 是传感器型号，兼容性取决于具体模组、供电和接口。优先复用 ACG720 资料包已经验证的相机模组。
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+\node[box,text width=2.5cm] (c) at (-5,0) {相机配置与采集\\SCCB、PCLK、数据};
+\node[tealbox,text width=2.6cm] (f) at (0,0) {像素打包 / 异步 FIFO\\帧同步、格式检查};
+\node[mainbox,text width=2.6cm] (d) at (5,0) {DDR3 帧缓存\\读写仲裁、帧所有权};
+\node[box,text width=2.6cm] (h) at (-5,-3) {HDMI 显示\\同步与像素输出};
+\node[tealbox,text width=2.6cm] (o) at (0,-3) {OSD 叠加\\姿态、轮速、距离、状态};
+\node[box,text width=2.6cm] (r) at (5,-3) {读 FIFO / 像素解包\\完整帧输出};
+\draw[flow] (c)--(f);\draw[flow] (f)--(d);\draw[flow] (d)--(r);
+\draw[flow] (r)--(o);\draw[flow] (o)--(h);
+\node[labeltext,above=3mm of c] {相机时钟域};\node[labeltext,above=3mm of d] {DDR 用户时钟域};
+\node[labeltext,below=3mm of o] {显示时钟域\quad /\quad 姿态文本在帧边界更新};
+\end{tikzpicture}
+\caption{视频链路建议：数据流用 FIFO 跨域，完整帧指针经握手切换。}\label{fig:video}
+\end{figure}
+
+\textbf{缓存与带宽算例。}RGB565 每像素 2 字节，单帧容量为
+\[
+ M=640\times480\times2=614\,400\ \mathrm{B}\approx0.586\ \mathrm{MiB}.
+\]
+双缓冲约 1.17 MiB，三缓冲约 1.76 MiB。若 30 fps 写入、60 Hz 显示每次读一帧，有效像素负载约为
+\[
+ B=M\,(30+60)=55.296\ \mathrm{MB/s}.
+\]
+该数值\textbf{不含}刷新、突发效率、仲裁及其他主设备负载；内存容量足够不代表控制器带宽、时序和延迟已验证。
+
+\textbf{防撕裂。}读取中的帧不得被写入覆盖。双缓冲需要所有权握手；采集与显示节奏不同，可在帧边界重复已完成帧、丢弃过期帧，或用三缓冲降低等待。记录输入帧数、完整帧数、丢帧和 FIFO 错误。
+
+\textbf{IMU 与画面。}FPGA 采集原始角速度、加速度和时间戳，软核校准与融合；显示横滚 roll、俯仰 pitch、航向 yaw 及有效标志。上电静止校准零偏，统一轴向、单位与正方向。六轴 IMU 的 yaw 会漂移。基础显示可用最新有效姿态并标注年龄；如需同步融合，应按帧时间对齐或插值 IMU 样本。
+
+\note{验收顺序}{DDR 自检与 HDMI 彩条分别通过，再验证静态相机画面、动态画面和姿态角叠加。旋转与倾斜 IMU 检查符号；断开传感器后应显示无效，不应继续把旧数据当实时角度。}
+
+\nextpage
+\subsection{任务 2：编码器反馈与双轮闭环}
+
+两轮差速底盘可以自然完成前进、后退、转弯和原地旋转。定义轮距为 $b$，左右轮半径为 $r_L,r_R$，车体线速度为 $v$、角速度为 $\omega$，左右轮角速度指令为
+\[
+ \omega_L^*=\frac{v-\omega b/2}{r_L},\qquad
+ \omega_R^*=\frac{v+\omega b/2}{r_R}.
+\]
+距离与半径使用米，车体/轮子角速度使用 rad/s；$v=0$ 且两轮反向即为原地旋转。
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+\node[mainbox,text width=2.6cm] (nav) at (-5,0) {软核导航\\$v,\omega$ 与速度斜坡};
+\node[box,text width=2.6cm] (conv) at (0,0) {差速换算\\左右轮目标};
+\node[tealbox,text width=2.6cm] (pi) at (5,0) {两路独立 PI\\限幅、抗积分饱和};
+\node[box,text width=2.6cm] (speed) at (-5,-3) {轮速估计\\计数 / 周期法};
+\node[box,text width=2.6cm] (enc) at (0,-3) {电机与编码器\\位置、方向反馈};
+\node[mainbox,text width=2.6cm] (pwm) at (5,-3) {安全仲裁 + PWM\\使能、方向、占空比};
+\draw[flow] (nav)--(conv);\draw[flow] (conv)--(pi);\draw[flow] (pi)--(pwm);
+\draw[flow] (pwm)--(enc);\draw[flow] (enc)--(speed);
+\draw[flow] (speed.west)--++(-.35,0)|-([yshift=8mm]pi.north)--(pi.north);
+\end{tikzpicture}
+\caption{轮速闭环结构示意。反馈路径在 FPGA 内闭合，高层导航只更新速度目标。}\label{fig:control}
+\end{figure}
+
+\textbf{编码器。}A/B 相先同步和去毛刺，再正交解码；滤波不得吞掉最高转速下的合法边沿。$N$ 表示\emph{车轮一圈的有效计数}，含减速比与解码倍数。测速窗口 $T_m$ 内计数变化为 $\Delta n$，PI 更新周期为 $T_c$，基本形式为
+\[
+ \widehat{\omega}=\frac{2\pi\Delta n}{N T_m},\qquad
+ u[k]=\operatorname{sat}\!\left(K_p e[k]+I[k]\right),\quad
+ I[k+1]=I[k]+K_i T_c e[k].
+\]
+其中 $e$ 为目标减实测轮速，$I$ 为积分项，sat 为输出限幅。实现时应限制积分量，并在输出饱和且误差推动同向饱和时暂停积分。低速可延长 $T_m$ 或结合脉冲周期法；积分始终使用实际 $T_c$。定点实现须检查位宽、符号与舍入。
+
+\textbf{建议起点。}PWM 约 20 kHz、控制更新约 1 kHz 可作为调试初值，不是通用最优参数。测速带宽由编码器分辨率和车速决定。目标速度加斜坡，换向先减速；命令超时、复位或故障由硬件仲裁处理。
+
+\textbf{调试顺序。}架空测试方向与计数 → 单轮速度阶跃 → 两轮直行 → 载荷变化 → 定点旋转。记录目标/实测轮速、占空比、积分量和时间戳；通过直线与旋转实验校准有效轮径和轮距。\cite{diffdrive}
+
+\nextpage
+\subsection{任务 3：实时避障与安全停车}
+
+三路前向/斜向测距可用于受限场景原型，但自主倒车、贴边转弯和原地旋转还需考虑后方、侧面和车角。测距滤波必须同时保留无效码和数据年龄；过期数据不能继续参与“前方安全”的判断。
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+\node[tealbox,text width=2.4cm] (run) at (-4.8,0) {正常跟踪};
+\node[box,text width=2.4cm] (slow) at (0,0) {距离接近\quad 减速};
+\node[mainbox,text width=2.4cm] (stop) at (4.8,0) {危险 / 过期\quad 停车};
+\node[box,text width=2.4cm] (resume) at (-4.8,-1.8) {重回路径点};
+\node[box,text width=2.4cm] (detour) at (0,-1.8) {低速绕行};
+\node[box,text width=2.4cm] (choose) at (4.8,-1.8) {确认空间与绕行侧};
+\draw[flow] (run)--(slow);\draw[flow] (slow)--(stop);
+\draw[flow] (stop)--(choose);\draw[flow] (choose)--(detour);\draw[flow] (detour)--(resume);\draw[flow] (resume)--(run);
+\node[labeltext,text width=12cm] at (0,-2.9) {任一运行状态遇危险或数据过期，均直接进入停车。\\退出停车须满足数据有效、空间安全；绕行超时或空间不足则保持停车并报错。};
+\end{tikzpicture}
+\caption{建议避障状态机。恢复运动须重新确认感知有效和车体扫掠空间。}\label{fig:avoid}
+\end{figure}
+
+\textbf{响应时间分开测量。}物理障碍出现后，先等待传感器采样，再传输和判定，最后驱动与机械系统响应。FPGA 的判定快，并不意味着整车瞬间停止。某些 ToF 的测量预算本身已达到数十毫秒。\cite{tof}
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+\foreach \x/\txt in {0/采样等待,3.8/传输与判定,7.6/控制与驱动,11.4/机械减速}{
+\node[box,text width=2.6cm] (n\x) at (\x,0) {\txt};}
+\draw[flow] (1.45,0)--(2.35,0);\draw[flow] (5.25,0)--(6.15,0);\draw[flow] (9.05,0)--(9.95,0);
+\node[labeltext] at (3.8,-.85) {数据年龄与逻辑响应均计入延迟预算};
+\end{tikzpicture}
+\caption{停车时延链：各阶段均需实测，图中宽度不代表时长。}\label{fig:latency}
+\end{figure}
+
+沿运动方向接近静态障碍，速度大小为 $s=|v|$ 时，直线停车阈值可估算为：
+\[
+ d_{\mathrm{stop}}\geq sT_{\mathrm{total}}+\frac{s^2}{2a_{\min}}+m.
+\]
+$T_{\mathrm{total}}$ 为制动前的保守总延迟，$a_{\min}$ 为不利工况下实测的保守减速度，$m$ 覆盖测距误差、车体前缘偏置和余量。以 $s=0.30$ m/s、$T=0.10$ s、$a=0.60$ m/s$^2$、$m=0.10$ m 为\emph{假设算例}，阈值至少为 $0.205$ m。旋转和弧线行驶还须检查整车扫掠区域。
+
+\warn{验收边界}{不能把“有效数据到 PWM 输出”的延迟写成“障碍出现到机械停止”的时间。分别测控制响应与最坏停车距离，并覆盖满载、电量变化、转向和低摩擦地面；动态障碍还需考虑相对接近速度。}
+
+\nextpage
+\subsection{任务 4：起终点与路径点自主导航}
+
+基础路线建议限定在\textbf{已知起点、小范围、低速、可重复布置}的场景。编码器与 IMU 提供短时位姿估计，路径点控制器生成速度指令，避障层在必要时接管。原文没有要求必须采用 SLAM；但单靠计时开环走固定动作，难以可靠展示自主导航。
+
+左右轮增量位移为 $\Delta s_L,\Delta s_R$ 时，可用中点近似更新里程计：
+\[
+ \Delta s=\frac{\Delta s_R+\Delta s_L}{2},\quad
+ \Delta\theta=\frac{\Delta s_R-\Delta s_L}{b},\quad
+ \begin{cases}
+ x_{k+1}=x_k+\Delta s\cos(\theta_k+\Delta\theta/2),\\
+ y_{k+1}=y_k+\Delta s\sin(\theta_k+\Delta\theta/2),\\
+ \theta_{k+1}=\operatorname{wrap}(\theta_k+\Delta\theta).
+ \end{cases}
+\]
+wrap 将角度回绕到约定区间。融合陀螺时使用同一时段的融合航向增量；轮滑、轮径误差和陀螺零偏仍会积累。长期可靠定位需地图匹配、允许的视觉标志物或其他外部观测修正。\cite{rep105}
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[x=.92cm,y=.9cm]
+\draw[Line,step=1] (0,0) grid (14,4);
+\fill[Muted!30] (6,1.4) rectangle (7.7,2.8);
+\node[font=\small] at (6.85,2.1) {障碍};
+\draw[Muted,dashed,thick] (1,1)--(4,2)--(10,2)--(13,3);
+\draw[flow,draw=Teal,line width=1.4pt] (1,1)--(4,2)--(5,2)--(5.5,.8)--(8.4,.8)--(9,2)--(10,2)--(13,3);
+\foreach \x/\y/\n in {1/1/起点,4/2/路径点1,10/2/路径点2,13/3/终点}{
+\fill[Ink] (\x,\y) circle(2.2pt);\node[font=\footnotesize,above=5pt] at (\x,\y) {\n};}
+\node[font=\footnotesize,text=Teal] at (7,.25) {局部绕行后恢复路径点};
+\end{tikzpicture}
+\caption{路径点导航概念图，非官方场地或实测轨迹。虚线为名义路线，实线为建议绕行关系。}\label{fig:path}
+\end{figure}
+
+\begin{enumerate}
+\item 保存路径点 $(x_i,y_i)$，计算距离与航向误差；角度误差统一到 $(-\pi,\pi]$。
+\item 第一版采用“停车对准—低速接近—到点切换”；熟练后使用 Pure Pursuit 等连续跟踪。
+\item 到点阈值、减速半径和航向容差由场地与实测误差决定，防止路径点附近来回抖动。
+\item 绕障后仍根据当前估计位姿重新计算目标；限定绕行时间，失败时停车并记录原因。
+\end{enumerate}
+
+\note{三项独立问题}{定位回答“我在哪里”，规划回答“从哪里走”，跟踪回答“怎样沿路走”。A* 只解决规划；增加雷达也不会自动消除里程计漂移或完成 SLAM。}
+
+\nextpage
+\section{进阶路线与边缘 AI}\label{sec:advanced}
+\subsection{从稳定基础到更强的自主能力}
+
+先让基础系统在断开 AI 后仍能完成安全运动与限定场景导航，再增加新的观测和算法。更高要求优先体现可量化的工程能力：感知覆盖、数据同步、最坏响应、定位修正与故障恢复。
+
+\begin{table}[H]\small
+\caption{三档实施路线与代价}
+\begin{tabularx}{\linewidth}{@{}L{2.3cm}Y Y@{}}\toprule
+\textbf{路线} & \textbf{新增能力} & \textbf{新增代价与验收条件}\\\midrule
+A 基础闭环 & 相机+IMU显示、编码器闭环、测距绕障、短路线多路径点 & 完成模块集成与标定；验证连续运行、重复导航和失败停车\\
+B 导航增强 & 二维雷达/允许的外部观测、位姿修正、局部地图与路径重规划 & 处理同步、外参和地图一致性；测定位误差与最坏规划耗时\\
+C AI 任务 & RK3588 识别/跟踪、目标属性、搜索和接近任务 & 图像传输、模型转换、版本适配、置信度与超时管理\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\textbf{导航增强如何做。}先定义地图范围、分辨率与机器人外形膨胀半径，再决定栅格算法。例如 100\,$\times$\,100 栅格若每格一字节，基础占据层约 10 kB，但 A* 的代价、父节点、开放表以及多个地图层还需额外内存。必须测量软核运行时间，不能只看地图大小。
+
+\textbf{FPGA 可展示的工程亮点。}
+\begin{itemize}
+\item \textbf{统一时间戳：}传感器数据与视频帧标记采用可关联的时间基准，显示数据年龄。
+\item \textbf{独立安全仲裁：}导航异常或 AI 失联时，硬件仍能限制速度并执行预定安全行为。
+\item \textbf{可观测控制链：}实时显示周期超限、编码器异常、测距失效、FIFO 错误计数。
+\item \textbf{故障复现：}保存命令、测距、轮速和状态切换，复盘某次停车或绕障失败。
+\end{itemize}
+
+\textbf{视觉链路的两种选择。}第一种让图像经 FPGA 缩放后发给 AI，能体现图像通路协同，但需要实现和验证网络或 USB 数据传输。第二种给 AI 独立摄像头，同时保留 FPGA 相机显示任务，集成较简单，但需要说明两相机的视角、时间和外参关系。
+
+\warn{通信预算}{640\,$\times$\,480 RGB565、30 fps 的纯像素负载约 18.43 MB/s，即 147.46 Mb/s；普通 UART 不适合传输这种原始视频。千兆网、USB 或压缩/降采样方案均须核对板卡实际接口、协议实现与有效吞吐。低速链路适合传输结构化检测结果。}
+
+\nextpage
+\subsection{任务 5 与任务 6：识别、搜索与接近目标}
+
+RK3588 可承担模型推理。推荐先跑通对应系统镜像的官方检测示例，再加入自身模型。PC 侧用 RKNN-Toolkit2 完成转换与量化，板端使用兼容的 RKNN Runtime 或 Lite2；转换工具、Runtime、NPU 驱动与镜像需要匹配。模型示例的 FPS 不能当作整机端到端帧率。\cite{rknn}
+
+\textbf{“红色水瓶”需要两层判断。}通用检测器可能只能给出 bottle 类别，颜色属性需要在目标区域做颜色判断或训练适合的数据集。颜色阈值要考虑白平衡和光照，并做多帧确认；只检测到红色区域，不能直接等同找到指定水瓶。
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+\node[box,text width=2.6cm] (s) at (-5,0) {搜索\\低速扫描 / 区域巡检};
+\node[box,text width=2.6cm] (c) at (0,0) {确认\\类别、颜色、多帧一致};
+\node[tealbox,text width=2.6cm] (a) at (5,0) {对准\\目标居中与航向修正};
+\node[mainbox,text width=2.6cm] (done) at (-5,-2) {到达\\距离满足、稳定停车};
+\node[box,text width=2.6cm] (near) at (0,-2) {接近\\距离反馈、减速、避障};
+\node[optbox,text width=2.6cm] (lost) at (5,-2) {丢失 / 超时\\限速、停车或重新搜索};
+\draw[flow] (s)--(c);\draw[flow] (c)--(a);\draw[flow] (a.south west)--(near.north east);
+\draw[flow] (near)--(done);\draw[optional] (a)--(lost);\draw[optional] (near)--(lost);
+\draw[optional] (lost.south)--++(0,-.5)-| (s.west);
+\end{tikzpicture}
+\caption{以红色水瓶为例的任务状态机。回退分支保证丢失目标时不会持续追逐旧位置。}\label{fig:ai}
+\end{figure}
+
+\begin{table}[H]\small
+\caption{AI 与控制器的建议消息内容}
+\begin{tabularx}{\linewidth}{@{}L{3.8cm}Y@{}}\toprule
+\textbf{字段} & \textbf{作用}\\\midrule
+协议版本、序号、长度、校验 & 识别旧包、错包与格式不兼容；通信错误不得变成运动命令\\
+帧 ID、采集时间戳、有效期 & 区分新图像和延迟结果；超时停止消费该结果\\
+类别、颜色属性、置信度 & 确认任务目标；低置信度触发等待或重新搜索\\
+目标框、中心位置、可选距离 & 计算视线偏差；接近距离优先来自可靠测距或经标定估计\\
+任务状态、心跳、故障码 & 管理搜索/跟随/到达，支持AI拔线和重连测试\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\note{语义到动作}{将“红色水瓶”映射为类别与颜色约束，结合方位和距离形成局部目标；AI 只提交目标或建议速度，最终输出受避障仲裁约束。任务可用按钮或预设文本选择，不必引入大语言模型。}
+
+\nextpage
+\section{验证与项目推进}\label{sec:verification}
+\subsection{按依赖顺序开发}
+
+以下为\textbf{可调整的 12 周工作量示例}，不是比赛日程。团队可并行推进视频与运动模块，但先冻结时钟、寄存器、坐标系、消息和错误码，再进行整机合并。基础阶段完成前不以 AI 演示替代缺失任务。
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+\node[box,text width=3.5cm] (a) at (-4.5,0) {第 1--2 周\\板卡、工具、供电、接口};
+\node[box,text width=3.5cm] (b) at (0,0) {第 3--4 周\\视频与单轮闭环};
+\node[box,text width=3.5cm] (c) at (4.5,0) {第 5--6 周\\IMU、双轮、测距停车};
+\node[tealbox,text width=3.5cm] (d) at (4.5,-1.7) {第 7--8 周\\路径点与绕障恢复};
+\node[box,text width=3.5cm] (e) at (0,-1.7) {第 9--10 周\\定位增强或 AI 扩展};
+\node[mainbox,text width=3.5cm] (f) at (-4.5,-1.7) {第 11--12 周\\回归、演示、材料固化};
+\draw[flow] (a)--(b);\draw[flow] (b)--(c);\draw[flow] (c)--(d);\draw[flow] (d)--(e);\draw[flow] (e)--(f);
+\end{tikzpicture}
+\caption{开发路线示意：每个阶段用可复现产物结束，再进入下一阶段。}\label{fig:roadmap}
+\end{figure}
+
+\begin{table}[H]\small
+\caption{阶段出口与建议分工}
+\begin{tabularx}{\linewidth}{@{}L{2.5cm}Y L{3.7cm}@{}}\toprule
+\textbf{阶段} & \textbf{进入下一阶段前必须拿到} & \textbf{建议责任}\\\midrule
+板级验证 & 正确约束、上电记录、UART日志、DDR自检、HDMI彩条 & 全队共同核对接口；指定硬件负责人\\
+独立模块 & 相机显示、单轮闭环、IMU原始数据、测距有效性 & 视频/逻辑、控制/机电并行\\
+基础整合 & 双轮动作、姿态叠加、减速停车、故障状态 & 软核/控制负责人集成，另一成员交叉测试\\
+导航闭环 & 多路径点、障碍绕行后恢复、失败退出 & 导航负责人；重复布置场地验证\\
+拓展功能 & 识别输出与任务状态；基础系统不依赖AI在线 & AI负责人；协议由控制方共同审核\\
+演示固化 & 测试记录、演示视频、版本包、冷启动复现 & 全队交叉执行演示脚本\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\textbf{建议冻结节点。}第一个节点冻结硬件接线和电平；第二个节点冻结寄存器与消息协议；第三个节点冻结演示场景与固件。后续改动必须回归视频、闭环、避障、导航和冷启动，避免为扩展功能破坏已通过模块。
+
+\textbf{时间不足时。}保留完整四项基础任务、可靠的故障处理和可解释的 FPGA 波形；优先减少开放场景、复杂模型和人机交互范围。创新展示可来自统一时间戳、硬件仲裁和可复现日志，不必全部依赖模型复杂度。
+
+\nextpage
+\subsection{建议验收表与现场演示}
+
+表\ref{tab:test}是\textbf{内部建议目标，全部待实测}。赛题没有给出这些数值。正式记录还应包含测试版本、地面、载荷、电量、传感器配置、样本数量、失败次数和测量方法。
+
+\begin{table}[H]\small
+\caption{量化验收建议与测量口径}\label{tab:test}
+\begin{tabularx}{\linewidth}{@{}L{2.0cm}L{5cm}Y@{}}\toprule
+\textbf{项目} & \textbf{建议起始目标} & \textbf{测量与判定}\\\midrule
+视频显示 & 640\,$\times$\,480、30 fps采集；连续30分钟运行 & 统计完整帧、丢帧、FIFO错误；检查撕裂与死机\\
+姿态采集 & 100--200 Hz处理起步；显示数据有效性 & 静止偏置、倾角变化、轴向；记录航向漂移而非隐藏\\
+轮速控制 & 1 kHz更新作为初值；中速稳态误差目标不超过5\% & 排除零速相对误差歧义；定义测速窗口、速度区间和负载\\
+避障响应 & 单独制定有效数据至安全输出的周期上限 & GPIO/逻辑分析仪测控制链；另测障碍出现至响应及停车距离\\
+路径点 & 简单场景可先以10--15 cm到点误差为目标 & 固定路径、地面、速度；测真实位置，不只看自身里程计\\
+重复任务 & 固定场景连续10次测试，逐次记录 & 保留失败样本与原因；10次成功不等于统计可靠性保证\\
+故障退化 & 传感器过期、命令超时、AI断线、重启均有规定行为 & 观察状态与实际运动；恢复后必须满足重新使能条件\\
+冷启动 & 无调试器干预进入待机，手动开始任务 & 核验Flash固化、启动顺序与默认驱动禁用\\\bottomrule
+\end{tabularx}
+\end{table}
+
+\textbf{建议现场演示顺序。}
+\begin{enumerate}
+\item 上电展示画面、姿态、距离与状态；倾斜 IMU 验证角度变化。
+\item 依次前进、后退、转向、定点旋转，展示编码器闭环曲线。
+\item 放置障碍，展示减速、停车、绕行和恢复；再执行多路径点导航。
+\item 演示一种故障注入，例如 AI 断线或测距过期，展示明确的退化行为。
+\item 若完成拓展，再展示检测/跟踪与一次完整目标搜索接近任务。
+\end{enumerate}
+
+\note{需要保留的证据}{带版本号的源码、综合/时序报告、寄存器与协议说明、接线与供电图、原始日志、测试条件、失败分析、未剪辑关键演示。用证据说明实现范围和限制，比单次成功画面更有说服力。}
+
+\nextpage
+\subsection{开工前待确认事项与资料入口}
+
+\begin{table}[H]\small
+\caption{影响方案落地的确认清单}
+\begin{tabularx}{\linewidth}{@{}L{2.4cm}Y Y@{}}\toprule
+\textbf{来源} & \textbf{需要确认} & \textbf{影响}\\\midrule
+所收板卡 & FPGA完整料号、PCB版本、原理图、CST/SDC、下载器 & 决定工程器件、引脚、电平与工具许可\\
+板卡资料包 & DDR3、摄像头、HDMI、软核例程及版本 & 决定先复用哪个最小工程、接口是否已验证\\
+机器人实物 & 轮径、轮距、减速比、有效计数、载荷与速度 & 决定运动学、测速分辨率、控制周期和标定\\
+外设数据表 & 电机电流、驱动制动方式、测距刷新率与视场 & 决定供电、限流、感知布局和停车阈值\\
+赛事答疑 & 场地/障碍、预建图与标志物、外部算力边界、误差口径 & 决定定位方式与最终验收场景\\\bottomrule
+\end{tabularx}
+\end{table}
+
+指南列出的赛题三适配板卡为 ACG720 / ACG750 / BX72 / ACG138-RK3588-CORE；相机可选适配的 OV5640、OV5647、双目或其他兼容设备，电机驱动与姿态检测等由队伍自主选型。平台章节另出现 ACX750 名称，进一步说明应以对应实物资料核验。\cite{contest}
+
+指南说明申请板卡每队一块、完赛后需按要求寄回，并列出官方 FPGA 指导群 213923272。借用与归还按最新官方通知执行；本报告不代替报名和现场规则。
+
+\subsubsection{第一天可以完成的工作}
+保存实物照片与型号；整理原理图和原厂例程；选定开发机与工具版本；跑通点灯、UART、DDR3自检和彩条；建立统一工程仓库及接线表。未拿到原理图前，不把猜测管脚写入最终连接方案。
+
+\subsubsection{文档使用方式}
+先据表\ref{tab:req}确定任务覆盖，再依图\ref{fig:architecture}分配模块；按图\ref{fig:roadmap}设置阶段出口，并用表\ref{tab:test}记录真实结果。后续若获得完整板卡资料和外设型号，可在本源文件中直接补充接线表、参数和实测曲线。
+
+\warn{当前证据边界}{已知条件为赛题指南与已申请 ACG720。本文没有板卡实测、已完成机器人或模型性能的证据；“可采用”“建议目标”“算例”均不表示已经实现或通过比赛验收。}
+
+\nextpage
+\begin{thebibliography}{99}
+\small\raggedright
+\bibitem{contest} 高云半导体. 全国大学生嵌入式芯片与系统设计竞赛'2026：FPGA创新设计赛道选题指南[Z]. 用户提供文件，2026. 赛题三见印刷15--17页；平台见8页；申请说明见19--20页.
+\bibitem{board} 高云半导体. 大学计划开发板：小梅哥ACX720[EB/OL]. \url{https://www.gowinsemi.com.cn/university/board/1}. 网页标题与用户ACG720名称不同，仅作交叉参照.
+\bibitem{eda} 高云半导体. 云源软件商业版：下载、许可与技术文档[EB/OL]. \url{https://www.gowinsemi.com.cn/software/1}.
+\bibitem{education} 高云半导体. 教育版软件及器件支持列表[EB/OL]. \url{https://www.gowinsemi.com.cn/university/software}.
+\bibitem{gmd} 高云半导体. GOWIN MCU Designer[EB/OL]. \url{https://www.gowinsemi.com.cn/software/14}.
+\bibitem{gorv} 高云半导体. Gowin GoRV32[EB/OL]. \url{https://www.gowinsemi.com.cn/software/15}.
+\bibitem{ti} Texas Instruments. Best Practices for Board Layout of Motor Drivers, SLVA959B[EB/OL]. \url{https://www.ti.com/lit/an/slva959b/slva959b.pdf}.
+\bibitem{diffdrive} ros2\_control. diff\_drive\_controller, Jazzy documentation[EB/OL]. \url{https://control.ros.org/jazzy/doc/ros2_controllers/diff_drive_controller/doc/userdoc.html}.
+\bibitem{tof} STMicroelectronics. VL53L1X datasheet[EB/OL]. \url{https://www.st.com/resource/en/datasheet/vl53l1x.pdf}. 参见测量timing budget说明；具体性能依配置与条件.
+\bibitem{rep105} ROS. REP 105: Coordinate Frames for Mobile Platforms[EB/OL]. \url{https://github.com/ros-infrastructure/rep/blob/master/rep-0105.rst}.
+\bibitem{rknn} Rockchip. RKNN-Toolkit2 and RKNN Model Zoo[EB/OL]. \url{https://github.com/airockchip/rknn-toolkit2}; \url{https://github.com/airockchip/rknn_model_zoo}.
+\end{thebibliography}
+\tagline{网页与工具版本核验日期：2026-09-26。动态网页可能更新，实际工程应记录所用稳定版本。}
+
+\vspace{6mm}
+\note{编译与编辑}{本文件为自包含 LaTeX 源码；图表由 TikZ 绘制，可修改文字、颜色和节点。使用 XeLaTeX 连续编译两次以解析目录页码与引用，或使用兼容的 Tectonic。详见压缩包中的 README。}
+\end{document}

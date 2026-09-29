@@ -1,0 +1,79 @@
+[
+  {
+    "path": ".DS_Store",
+    "extension": "",
+    "file_type": "other",
+    "role_hint": "material",
+    "size_bytes": 6148
+  },
+  {
+    "path": "2026_FPGA赛道厂商选题汇总.tex",
+    "extension": ".tex",
+    "file_type": "latex",
+    "role_hint": "material",
+    "size_bytes": 14215
+  },
+  {
+    "path": "2026_FPGA赛道厂商选题汇总.tex.zip",
+    "extension": ".zip",
+    "file_type": "other",
+    "role_hint": "material",
+    "size_bytes": 7377
+  },
+  {
+    "path": "2026全国大学生嵌入式芯片与系统设计竞赛FPGA创新设计赛道厂商选题汇总.pdf",
+    "extension": ".pdf",
+    "file_type": "pdf",
+    "role_hint": "material",
+    "size_bytes": 338298
+  },
+  {
+    "path": "全国大学生嵌入式芯片与系统设计竞赛'2026FPGA赛道选题指南-AMD.pdf",
+    "extension": ".pdf",
+    "file_type": "pdf",
+    "role_hint": "material",
+    "size_bytes": 950952
+  },
+  {
+    "path": "全国大学生嵌入式芯片与系统设计竞赛'2026FPGA赛道选题指南-中科亿海微.pdf",
+    "extension": ".pdf",
+    "file_type": "pdf",
+    "role_hint": "material",
+    "size_bytes": 433787
+  },
+  {
+    "path": "全国大学生嵌入式芯片与系统设计竞赛'2026FPGA赛道选题指南-复旦微.pdf",
+    "extension": ".pdf",
+    "file_type": "pdf",
+    "role_hint": "material",
+    "size_bytes": 562207
+  },
+  {
+    "path": "全国大学生嵌入式芯片与系统设计竞赛'2026FPGA赛道选题指南-安路科技.pdf",
+    "extension": ".pdf",
+    "file_type": "pdf",
+    "role_hint": "material",
+    "size_bytes": 1592860
+  },
+  {
+    "path": "全国大学生嵌入式芯片与系统设计竞赛'2026FPGA赛道选题指南-易灵思.pdf",
+    "extension": ".pdf",
+    "file_type": "pdf",
+    "role_hint": "material",
+    "size_bytes": 616482
+  },
+  {
+    "path": "全国大学生嵌入式芯片与系统设计竞赛'2026FPGA赛道选题指南-紫光同创.pdf",
+    "extension": ".pdf",
+    "file_type": "pdf",
+    "role_hint": "material",
+    "size_bytes": 1348484
+  },
+  {
+    "path": "全国大学生嵌入式芯片与系统设计竞赛'2026FPGA赛道选题指南-高云半导体.pdf",
+    "extension": ".pdf",
+    "file_type": "pdf",
+    "role_hint": "material",
+    "size_bytes": 1447261
+  }
+]
